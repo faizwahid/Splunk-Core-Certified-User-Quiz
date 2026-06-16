@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f1419">
+<title>Splunk Set 1</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0f1419;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+.app{display:flex;flex-direction:column;height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);position:relative}
+
+.header{padding:12px 16px 8px;border-bottom:1px solid #1f2937;background:#0f1419;flex-shrink:0}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.set-label{font-size:11px;letter-spacing:1.5px;color:#94a3b8;font-weight:600;text-transform:uppercase}
+.score-pill{font-size:12px;color:#94a3b8;font-weight:500}
+.score-pill .ok{color:#4ade80}.score-pill .bad{color:#f87171}
+.progress-bar{height:3px;background:#1f2937;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#65a637,#a3e635);transition:width .3s}
+.timer-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:#94a3b8}
+.timer{font-variant-numeric:tabular-nums;font-weight:600}
+.timer.low{color:#fbbf24}.timer.crit{color:#f87171}
+.q-num{color:#e5e7eb;font-weight:600}
+
+.main{flex:1;overflow-y:auto;padding:20px 16px 16px;-webkit-overflow-scrolling:touch}
+.question{font-size:17px;line-height:1.5;margin-bottom:20px;font-weight:500;color:#f1f5f9}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{padding:14px 16px;background:#1a2129;border:1.5px solid #1f2937;border-radius:12px;text-align:left;color:#e5e7eb;font-size:15px;line-height:1.4;transition:all .15s;display:flex;align-items:flex-start;gap:10px;min-height:54px;width:100%}
+.opt:active{transform:scale(.98)}
+.opt-letter{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#94a3b8;margin-top:1px}
+.opt.flash-correct{border-color:#4ade80;background:#0f2820;animation:pulseGreen .5s ease}
+.opt.flash-correct .opt-letter{background:#4ade80;color:#0f1419}
+.opt.flash-wrong{border-color:#f87171;background:#3a1318;animation:shakeRed .5s ease}
+.opt.flash-wrong .opt-letter{background:#f87171;color:#0f1419}
+.opt:disabled{cursor:default}
+
+@keyframes pulseGreen{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes shakeRed{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.footer{padding:12px 16px;border-top:1px solid #1f2937;background:#0f1419;flex-shrink:0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.btn{width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:600;transition:transform .1s,opacity .2s;min-height:54px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#65a637;color:#0f1419}
+.btn-primary:disabled{background:#1f2937;color:#475569}
+.btn-secondary{background:#1a2129;color:#e5e7eb;border:1px solid #1f2937}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+
+/* MODAL */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;backdrop-filter:blur(2px)}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#151d26;border-top-left-radius:24px;border-top-right-radius:24px;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);z-index:101;padding-bottom:env(safe-area-inset-bottom);max-height:85dvh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+.sheet.show{transform:translateY(0)}
+.sheet-grip{width:36px;height:4px;background:#475569;border-radius:2px;margin:10px auto 0}
+.sheet-head{padding:18px 20px 14px;border-bottom:1px solid #1f2937}
+.sheet-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px}
+.sheet-icon.ok{background:#0f2820;color:#4ade80;border:2px solid #4ade80}
+.sheet-icon.bad{background:#3a1318;color:#f87171;border:2px solid #f87171}
+.sheet-title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.sheet-title.ok{color:#4ade80}
+.sheet-title.bad{color:#f87171}
+
+.sheet-body{padding:16px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.ca-box{padding:14px;background:#0f2820;border:1.5px solid #4ade80;border-radius:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px}
+.ca-box .opt-letter{background:#4ade80;color:#0f1419}
+.ca-box .ca-content{flex:1}
+.ca-box .ca-label{font-size:10px;letter-spacing:1.5px;color:#4ade80;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.ca-box .ca-text{font-size:14px;line-height:1.4;color:#e5e7eb}
+
+.explain{padding:14px;background:#101a22;border-left:3px solid #65a637;border-radius:6px;font-size:14px;line-height:1.55;color:#cbd5e1}
+.explain b{color:#a3e635}
+.explain-label{font-size:10px;letter-spacing:1.5px;color:#65a637;font-weight:700;text-transform:uppercase;margin-bottom:6px;display:block}
+
+.sheet-footer{padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #1f2937;flex-shrink:0}
+
+.screen{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;overflow-y:auto}
+.screen h1{font-size:28px;margin-bottom:8px;font-weight:700;color:#f1f5f9;line-height:1.2}
+.screen .sub{color:#94a3b8;margin-bottom:32px;line-height:1.5;font-size:15px}
+.mode-card{padding:18px;background:#1a2129;border:1.5px solid #1f2937;border-radius:14px;margin-bottom:10px;text-align:left;transition:all .15s;width:100%}
+.mode-card:active{transform:scale(.98)}
+.mode-card.active{border-color:#65a637}
+.mode-card h3{font-size:16px;margin-bottom:4px;color:#f1f5f9}
+.mode-card p{font-size:13px;color:#94a3b8;line-height:1.4}
+
+.result-pct{font-size:64px;font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:6px}
+.result-pct.pass{color:#4ade80}.result-pct.fail{color:#f87171}
+.result-label{font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:24px}
+.result-label.pass{color:#4ade80}.result-label.fail{color:#f87171}
+.stat-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1f2937;font-size:14px}
+.stat-row:last-child{border:none}
+.stat-row span:first-child{color:#94a3b8}
+.stat-row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+
+.review-item{padding:16px;background:#1a2129;border-radius:12px;margin-bottom:12px;border-left:3px solid #f87171}
+.review-q{font-size:14px;font-weight:600;margin-bottom:10px;line-height:1.4;color:#f1f5f9}
+.review-q .qnum{color:#94a3b8;font-weight:400;margin-right:6px}
+.review-answers{font-size:13px;line-height:1.5}
+.review-answers .label{color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:2px}
+.review-your{color:#f87171;margin-bottom:8px}
+.review-correct{color:#4ade80;margin-bottom:8px}
+.review-exp{color:#cbd5e1;font-size:13px;padding-top:8px;border-top:1px solid #1f2937;margin-top:8px;line-height:1.5}
+
+@media (max-height:600px){
+.header{padding:8px 16px 6px}.main{padding:14px 16px}.question{font-size:15px;margin-bottom:14px}
+.opt{padding:11px 14px;min-height:46px;font-size:14px}.footer{padding:8px 16px}.btn{padding:13px;min-height:46px}
+.sheet-head{padding:14px 18px 10px}.sheet-icon{width:40px;height:40px;font-size:20px}.sheet-title{font-size:18px}
+}
+
+.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:10px;opacity:.6;font-weight:500}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+const SET_NAME = "Set 1";
+const PASS_THRESHOLD = 70;
+
+const questions = [
+  {q:"Which search string only returns events from host=WWW3?",
+   opts:["Host=WWW3","host=WWW*","host=WWW3","host=*"],a:2,
+   exp:"Field names are case-sensitive in Splunk — must be lowercase <b>host</b>. WWW3 is the exact value (no wildcard)."},
+  {q:"By default, how long does Splunk retain a search job?",
+   opts:["1 Day","7 Days","15 Minutes","10 Minutes"],a:3,
+   exp:"Default job lifetime is <b>10 minutes</b>. Can be extended to 7 days via Job Settings."},
+  {q:"What must be done before an automatic lookup can be created?",
+   opts:["Verified using the inputlookup command","The lookup definition must be created","The lookup file must be uploaded to Splunk","The lookup command must be used"],a:1,
+   exp:"For an <b>automatic</b> lookup, you must first create a lookup definition (after the file is uploaded). The definition is the prerequisite step."},
+  {q:"Which Splunk component typically resides on the machines where data originates?",
+   opts:["Deployment server","Search head","Forwarder","Indexer"],a:2,
+   exp:"<b>Forwarders</b> (usually Universal Forwarders) sit on source machines and forward data to indexers."},
+  {q:"What determines the scope of data that appears in a scheduled report?",
+   opts:["All data accessible to the owner will appear","Owner can configure to use User role or owner's profile","All data accessible to all users until next run","All data accessible to the User role"],a:0,
+   exp:"Scheduled reports run with the <b>owner's permissions</b> by default."},
+  {q:"When writing searches in Splunk, which is true about Booleans?",
+   opts:["Must be in quotations","Must be in parentheses","Must be uppercase","Must be lowercase"],a:2,
+   exp:"Boolean operators (AND, OR, NOT) must be <b>UPPERCASE</b>, otherwise treated as search terms."},
+  {q:"Which search returns events with 'failure' in index netfw OR 'warn'/'critical' in index netops?",
+   opts:["(index=netfw failure) AND (index=netops (warn OR critical))","(index=netfw failure) AND index=netops warn OR critical","(index=netfw failure) OR (index=netops (warn OR critical))","(index=netfw failure) OR index=netops OR (warn OR critical)"],a:2,
+   exp:"Use <b>OR</b> between the two index conditions and group each with parentheses."},
+  {q:"Select the accurate pipe placement: index=security sourcetype=access_* status=200 stats count by price",
+   opts:["index=security sourcetype=access_* | status=200 | stats count by price","index=security sourcetype=access_* status=200 | count by price","index=security sourcetype=access_* status=200 | stats count by price","index=security sourcetype=access_* status=200 | stats count | by price"],a:2,
+   exp:"Pipe goes <b>before</b> the transforming command (stats). The 'by' clause stays attached to stats."},
+  {q:"Which constraint can be used with the top command?",
+   opts:["fieldcount","limit","useperc","addtotals"],a:1,
+   exp:"<b>limit</b> caps the number of results returned by top. e.g. | top limit=5 host"},
+  {q:"When editing a dashboard, which is a possible option?",
+   opts:["Drag a dashboard panel to a different location","Modify the chart type displayed in a panel","Add an output","Export a dashboard panel"],a:1,
+   exp:"In edit mode you can <b>modify chart types/visualizations</b> on panels. Dragging is also valid but the most distinctive edit action."},
+  {q:"Command modifiers in the search string are displayed in what color?",
+   opts:["Red","Orange","Blue","Highlighted"],a:2,
+   exp:"Command modifiers (like 'as', 'by') appear in <b>blue</b> in the search bar."},
+  {q:"Which represents Splunk's recommended naming convention for dashboards?",
+   opts:["Group_Object_Description","Object_Group_Description","Description_Group_Object","Group_Description_Object"],a:0,
+   exp:"Splunk best practice: <b>Group_Object_Description</b> (e.g. Security_Login_Failed)."},
+  {q:"How can search results be kept longer than 7 days?",
+   opts:["By changing the job settings","By scheduling a report","By changing the time range picker to more than 7 days","By creating a link to the job"],a:1,
+   exp:"<b>Schedule the report</b> — scheduled report results are retained on disk per the report's settings."},
+  {q:"Which is a Splunk search best practice?",
+   opts:["Filter as early as possible","Use wildcards to return more search results","Include as few search terms as possible","Never specify more than one index"],a:0,
+   exp:"<b>Filter early</b> — narrow time range, index, sourcetype, host first to reduce data scanned."},
+  {q:"When looking at a dashboard panel based on a report, which is true?",
+   opts:["Cannot modify search, cannot change visualization","Can modify search, cannot change visualization","Can modify search and change visualization","Cannot modify search, but can change visualization"],a:3,
+   exp:"Report-based panels are <b>locked to the report's search</b>, but visualization can be changed per-panel."},
+  {q:"Which are common constraints of the top command?",
+   opts:["limit, showpercent","limit, count","limits, countfield","showperc, countfield"],a:0,
+   exp:"<b>limit</b> and <b>showpercent</b> are the standard top command constraints."},
+  {q:"Which is true about line charts in search results?",
+   opts:["Optimal for single and multiple series","Optimal for single series when using Fast mode","Optimal for multiseries searches with 2+ columns","Optimal for multiple series with 3 or more columns"],a:2,
+   exp:"Line charts work best with <b>multiseries data, 2 or more columns</b>."},
+  {q:"How are events displayed after a search is executed?",
+   opts:["Alphabetically by field name","Randomly by default","Chronological order","Reverse chronological order"],a:3,
+   exp:"Default is <b>reverse chronological</b> — newest events first."},
+  {q:"Which is true about user account settings and preferences?",
+   opts:["Full names changeable only by Power/Admin","Full name, time zone, default app set via login name in Splunk bar","Time zones auto-updated from computer","Search & Reporting is the only default app option"],a:1,
+   exp:"Click your name in the Splunk bar to set <b>full name, time zone, default app</b>."},
+  {q:"What is a primary function of a scheduled report?",
+   opts:["Auto-detect performance changes","Scheduled archiving","Triggering an alert when conditions are met","Auto-generated PDF reports of trends"],a:2,
+   exp:"Scheduled reports can <b>trigger alert actions</b> when conditions match (email, scripts, etc.)."},
+  {q:"After a search, what does clicking and dragging the timeline do?",
+   opts:["Filters current search results","Expands the time range","Moves to past/future events","Executes a new search"],a:0,
+   exp:"Click-and-drag on timeline <b>filters existing results</b> without re-running."},
+  {q:"Which command reviews the contents of a specified static lookup file?",
+   opts:["csvlookup","outputlookup","lookup","inputlookup"],a:3,
+   exp:"<b>| inputlookup filename.csv</b> displays the lookup file contents as a result set."},
+  {q:"What must be done to use a lookup table in Splunk?",
+   opts:["Configured to run automatically","Contents pasted into search bar","Uploaded to etc/apps/lookups for auto-ingestion","File uploaded AND lookup definition created"],a:3,
+   exp:"Two steps: <b>upload the file</b>, then <b>create a lookup definition</b> in Settings."},
+  {q:"When sorting on multiple fields with sort, what delimiter goes between field names?",
+   opts:["| (pipe)",", (comma)","$ (dollar)","! (exclamation)"],a:1,
+   exp:"<b>Comma</b> separates fields. e.g. | sort -count, host"},
+  {q:"Which time range config returns real-time events for the past 30 seconds?",
+   opts:["Advanced - Earliest: 30s ago, Latest: Now","Relative - Earliest: 30s ago, Latest: Now","Preset - Relative: 30s ago","Real-time - Earliest: 30s ago, Latest: Now"],a:3,
+   exp:"<b>Real-time</b> mode with rolling window is the only one that gives live streaming results."},
+  {q:"What is the correct syntax to count events containing a vendor_action field?",
+   opts:["count stats vendor_action","count stats (vendor_action)","stats count(vendor_action)","stats vendor_action (count)"],a:2,
+   exp:"<b>stats count(field)</b> — function-style syntax counts events where that field has a value."},
+  {q:"One benefit of creating dashboard panels from reports?",
+   opts:["Changes to underlying report affect every dashboard using it","No benefits","More efficient — one search string","Newly created dashboards auto-include it"],a:0,
+   exp:"<b>Centralized maintenance</b> — edit the report once, all dashboards reflect the change."},
+  {q:"By default, which field appears in the fields sidebar under Interesting Fields?",
+   opts:["host","source","index","sourcetype"],a:3,
+   exp:"Tricky: host, source, sourcetype are <b>Selected Fields</b> by default. sourcetype is the closest correct here."},
+  {q:"Which is true about case sensitivity?",
+   opts:["Both names and values NOT case sensitive","Field values ARE case sensitive; names NOT","Field names ARE case sensitive; values NOT","Both names and values ARE case sensitive"],a:2,
+   exp:"<b>Field NAMES are case sensitive</b> (Host ≠ host). Values are NOT (status=OK = status=ok)."},
+  {q:"What does the rare command do?",
+   opts:["Returns lowest 10 field values","Returns top 10 field values","Returns most common values","Returns least common field values"],a:3,
+   exp:"<b>rare</b> = opposite of top. Returns least common values of a field."},
+  {q:"Which directory does Splunk look in for alert action scripts?",
+   opts:["$SPLUNK_HOME/etc/scripts","$SPLUNK_HOME/bin/scripts","$SPLUNK_HOME/etc/scripts/bin","$SPLUNK_HOME/bin/etc/scripts"],a:1,
+   exp:"<b>$SPLUNK_HOME/bin/scripts</b> — also $SPLUNK_HOME/etc/apps/&lt;app&gt;/bin."},
+  {q:"Which Boolean is always implied between two search terms?",
+   opts:["OR","XOR","AND","NOT"],a:2,
+   exp:"<b>AND</b> is implicit. 'error fail' = 'error AND fail'."},
+  {q:"What does the values function of stats command do?",
+   opts:["Returns count of unique values","Lists unique values of a field","Returns count of events matching","Lists all values"],a:1,
+   exp:"<b>values(field)</b> returns a list of unique, sorted values."},
+  {q:"Which stats function provides count of unique values for a field?",
+   opts:["count-by(field)","dc(field)","distinct-count(field)","count(field)"],a:1,
+   exp:"<b>dc(field)</b> = distinct count. distinct_count() with underscore also works, but dc() is the shorthand."},
+  {q:"A collection of items containing data inputs, UI elements, and knowledge objects is known as what?",
+   opts:["JSON","An enhanced solution","An app","A role"],a:2,
+   exp:"That's a Splunk <b>app</b> — bundled config, UI, and knowledge objects."},
+  {q:"Which is true about Splunk alerts?",
+   opts:["Based on searches run on scheduled interval OR real-time","Trigger only email notifications","Require cron to run","Run exclusively as real-time"],a:0,
+   exp:"Alerts run on <b>scheduled OR real-time</b> searches. Many trigger actions besides email."},
+  {q:"What is the purpose of using a 'by' clause with stats?",
+   opts:["Partition input data based on split-by fields","Specify how values in a list are delimited","Compute numerical statistics on each field","Group results by one or more fields"],a:3,
+   exp:"<b>by</b> groups results by one or more fields. e.g. stats count by host"},
+  {q:"How do you add or remove fields from search results?",
+   opts:["fields + to add, fields - to remove","table + to add, table - to remove","fields Plus to add, fields Minus to remove","field + to add, field - to remove"],a:0,
+   exp:"<b>| fields + host source</b> (keep). <b>| fields - _raw</b> (drop). Plural 'fields'."},
+  {q:"A field exists in results but isn't in the fields sidebar. How to add it?",
+   opts:["Not possible — all fields always appear","Click Selected Fields and select the field","Click All Fields and select the field","Click Interesting Fields and select the field"],a:2,
+   exp:"<b>All Fields</b> dialog lets you toggle any field into Selected Fields."},
+  {q:"In the fields sidebar, which character denotes alphanumeric field values?",
+   opts:["%","a","a#","#"],a:1,
+   exp:"<b>a</b> = alphanumeric. <b>#</b> = numeric."},
+  {q:"What is the main requirement for creating visualizations using Splunk UI?",
+   opts:["Transform event data into JSON first","Transform into Excel format first","Transform into statistical data tables first","Transform into XML format first"],a:2,
+   exp:"Visualizations need <b>statistical results</b> — use stats, chart, timechart, top, rare first."},
+  {q:"What syntax is used to link key/value pairs in search strings?",
+   opts:["action+purchase","action equal purchase","action=purchase","action | purchase"],a:2,
+   exp:"<b>field=value</b> with the equals sign."},
+  {q:"What UI component allows for time selection?",
+   opts:["Time summary","Data source time statistics","Search time picker","Time range picker"],a:3,
+   exp:"<b>Time range picker</b> — dropdown next to the search bar."},
+  {q:"Which search returns results where fail, 400, AND error all exist in every event?",
+   opts:["error OR fail OR 400","error AND (fail OR 400)","error AND (fail AND 400)","error OR (fail and 400)"],a:2,
+   exp:"All three must be present → <b>AND between all</b>. Parentheses don't change the logic here."},
+  {q:"Placed early in a search, which command is most effective at reducing search execution time?",
+   opts:["fields +","rename","dedup","sort -"],a:0,
+   exp:"<b>fields +</b> early reduces data carried through the pipeline, speeding everything after."},
+  {q:"Which is the most efficient filter for running searches in Splunk?",
+   opts:["Selected Fields","Sourcetype","Time","Fast mode"],a:2,
+   exp:"<b>Time</b> is the most efficient filter — Splunk indexes by time, so narrowing time range cuts data scanned the most."},
+  {q:"How does Splunk determine which fields to extract from data?",
+   opts:["Auto-discovers based on sourcetype and key/value pairs in data","Only last 24 hours","Only manually specified fields","Only fields that generate interesting visualizations"],a:0,
+   exp:"Splunk <b>auto-discovers fields</b> at search time from sourcetype rules and key=value patterns."},
+  {q:"Which file type is an option for exporting Splunk search results?",
+   opts:["JSON","RTF","PDF","XLS"],a:0,
+   exp:"Export options: <b>Raw, CSV, XML, JSON</b>. PDF is for reports/dashboards, not raw search export."},
+  {q:"What syntax is used to link key/value pairs in search strings?",
+   opts:["Quotation marks","Parentheses","@ or # symbols","Relational operators such as =, <, or >"],a:3,
+   exp:"<b>Relational operators</b> (=, !=, <, >, <=, >=) link key/value pairs."},
+  {q:"Which search returns a field containing the number of matching events, named 'Event Count'?",
+   opts:["index=security failure | stats dc(count) as \"Event Count\"","index=security failure | stats count as \"Event Count\"","index=security failure | stats sum as \"Event Count\"","index=security failure | stats count by \"Event Count\""],a:1,
+   exp:"<b>stats count as \"Event Count\"</b> — count() returns event count, 'as' renames."}
+];
+
+// === APP LOGIC ===
+const app = document.getElementById('app');
+const backdrop = document.getElementById('backdrop');
+const sheet = document.getElementById('sheet');
+
+let state = {screen:'start',mode:'study',index:0,answers:[],timeLeft:60,timerId:null,startTime:null};
+
+function render(){
+  if(state.screen === 'start') renderStart();
+  else if(state.screen === 'quiz') renderQuiz();
+  else if(state.screen === 'end') renderEnd();
+  else if(state.screen === 'review') renderReview();
+}
+
+function renderStart(){
+  app.innerHTML = `
+    <div class="screen">
+      <h1>Splunk Core User</h1>
+      <div style="font-size:13px;letter-spacing:2px;color:#65a637;font-weight:700;margin-bottom:6px">${SET_NAME.toUpperCase()}</div>
+      <p class="sub">${questions.length} questions. Pass mark: ${PASS_THRESHOLD}%.</p>
+      <button class="mode-card ${state.mode==='study'?'active':''}" onclick="setMode('study')">
+        <h3>📖 Study Mode</h3>
+        <p>No timer. Tap an answer → popup shows correct/wrong + explanation. Best for train rides and bedtime review.</p>
+      </button>
+      <button class="mode-card ${state.mode==='exam'?'active':''}" onclick="setMode('exam')">
+        <h3>⏱️ Exam Mode</h3>
+        <p>60 seconds per question. Locked answers. Final pass/fail simulates real exam pressure.</p>
+      </button>
+    </div>
+    <div class="footer">
+      <button class="btn btn-primary" onclick="startQuiz()">Start ${state.mode==='exam'?'Exam':'Studying'} →</button>
+    </div>
+      <div class="watermark">made by faizwahid · Jun 2026</div>
+  `;
+}
+
+function setMode(m){state.mode=m;render()}
+
+function startQuiz(){
+  state.screen='quiz';state.index=0;state.answers=[];state.startTime=Date.now();
+  startTimer();render();
+}
+
+function startTimer(){
+  if(state.mode!=='exam')return;
+  clearInterval(state.timerId);
+  state.timeLeft=60;
+  state.timerId=setInterval(()=>{
+    state.timeLeft--;
+    if(state.timeLeft<=0){
+      clearInterval(state.timerId);
+      if(state.answers[state.index]===undefined){
+        state.answers[state.index]={selected:-1,correct:false,timeUp:true};
+        showResultSheet();
+      }
+      return;
+    }
+    updateTimer();
+  },1000);
+}
+
+function updateTimer(){
+  const el = document.querySelector('.timer');
+  if(!el)return;
+  el.textContent = formatTime(state.timeLeft);
+  el.classList.remove('low','crit');
+  if(state.timeLeft<=10) el.classList.add('crit');
+  else if(state.timeLeft<=20) el.classList.add('low');
+}
+
+function formatTime(s){
+  const m=Math.floor(s/60),sec=s%60;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function renderQuiz(){
+  const i = state.index;
+  const q = questions[i];
+  const ans = state.answers[i];
+  const answered = ans !== undefined;
+  const correct = state.answers.filter(a=>a&&a.correct).length;
+  const wrong = state.answers.filter(a=>a&&!a.correct).length;
+
+  const optsHtml = q.opts.map((o,idx)=>{
+    let flash = '';
+    if(answered && ans.selected===idx){
+      flash = ans.correct ? 'flash-correct' : 'flash-wrong';
+    }
+    const letter = String.fromCharCode(65+idx);
+    return `<button class="opt ${flash}" ${answered?'disabled':''} onclick="selectAnswer(${idx})">
+      <span class="opt-letter">${letter}</span>
+      <span>${escapeHtml(o)}</span>
+    </button>`;
+  }).join('');
+
+  const progress = ((i+1)/questions.length)*100;
+  const timerHtml = state.mode==='exam' ? `
+    <div class="timer-row">
+      <span>⏱</span>
+      <span class="timer">${formatTime(state.timeLeft)}</span>
+    </div>` : '';
+
+  const footerBtn = (!answered && state.mode==='exam') ? `
+    <button class="btn btn-secondary" onclick="skipQuestion()">Skip ↷</button>` : `
+    <button class="btn btn-primary" disabled>Tap an answer above</button>`;
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-row">
+        <div class="set-label">${SET_NAME} · <span class="q-num">${i+1}/${questions.length}</span></div>
+        <div class="score-pill"><span class="ok">${correct}✓</span> · <span class="bad">${wrong}✗</span></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      ${timerHtml}
+    </div>
+    <div class="main">
+      <div class="question">${escapeHtml(q.q)}</div>
+      <div class="options">${optsHtml}</div>
+    </div>
+    <div class="footer">${footerBtn}</div>
+  `;
+}
+
+function selectAnswer(idx){
+  if(state.answers[state.index]!==undefined)return;
+  clearInterval(state.timerId);
+  const q = questions[state.index];
+  const isCorrect = idx === q.a;
+  state.answers[state.index]={selected:idx,correct:isCorrect,timeUp:false};
+  render();
+  setTimeout(()=>showResultSheet(), 550);
+}
+
+function skipQuestion(){
+  state.answers[state.index]={selected:-1,correct:false,timeUp:false,skipped:true};
+  showResultSheet();
+}
+
+function showResultSheet(){
+  const i = state.index;
+  const q = questions[i];
+  const ans = state.answers[i];
+  const isCorrect = ans.correct;
+  const isTimeUp = ans.timeUp;
+  const isSkipped = ans.skipped;
+  const isLast = i === questions.length-1;
+
+  let cls, title, icon;
+  if(isCorrect){
+    cls='ok';title='Correct!';icon='✓';
+  } else {
+    cls='bad';
+    title = isTimeUp ? "Time's Up" : (isSkipped ? 'Skipped' : 'Incorrect');
+    icon = isTimeUp ? '⏱' : '✗';
+  }
+
+  const caHtml = !isCorrect ? `
+    <div class="ca-box">
+      <span class="opt-letter">${String.fromCharCode(65+q.a)}</span>
+      <div class="ca-content">
+        <div class="ca-label">Correct Answer</div>
+        <div class="ca-text">${escapeHtml(q.opts[q.a])}</div>
+      </div>
+    </div>` : '';
+
+  sheet.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-icon ${cls}">${icon}</div>
+      <div class="sheet-title ${cls}">${title}</div>
+    </div>
+    <div class="sheet-body">
+      ${caHtml}
+      <div class="explain">
+        <span class="explain-label">Explanation</span>
+        ${q.exp}
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" onclick="nextQuestion()">
+        ${isLast?'See Results':'Next Question'} →
+      </button>
+    </div>
+  `;
+
+  requestAnimationFrame(()=>{
+    backdrop.classList.add('show');
+    sheet.classList.add('show');
+  });
+}
+
+function nextQuestion(){
+  backdrop.classList.remove('show');
+  sheet.classList.remove('show');
+  setTimeout(()=>{
+    if(state.index===questions.length-1){
+      state.screen='end';
+      clearInterval(state.timerId);
+      render();
+      return;
+    }
+    state.index++;
+    startTimer();
+    render();
+  }, 250);
+}
+
+function renderEnd(){
+  const correct = state.answers.filter(a=>a&&a.correct).length;
+  const pct = Math.round((correct/questions.length)*100);
+  const passed = pct >= PASS_THRESHOLD;
+  const wrong = state.answers.filter(a=>a&&!a.correct).length;
+  const skipped = state.answers.filter(a=>!a||a.skipped||a.timeUp||a.selected===-1).length;
+  const duration = Math.round((Date.now()-state.startTime)/1000);
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="set-label" style="margin-bottom:12px">${SET_NAME} Results</div>
+      <div class="result-pct ${passed?'pass':'fail'}">${pct}%</div>
+      <div class="result-label ${passed?'pass':'fail'}">${passed?'✓ Passed':'✗ Did Not Pass'}</div>
+      <div>
+        <div class="stat-row"><span>Correct</span><span style="color:#4ade80">${correct} / ${questions.length}</span></div>
+        <div class="stat-row"><span>Incorrect</span><span style="color:#f87171">${wrong}</span></div>
+        ${skipped>0?`<div class="stat-row"><span>Skipped / Time Up</span><span>${skipped}</span></div>`:''}
+        <div class="stat-row"><span>Mode</span><span>${state.mode==='exam'?'Exam':'Study'}</span></div>
+        <div class="stat-row"><span>Time</span><span>${formatTime(duration)}</span></div>
+        <div class="stat-row"><span>Pass threshold</span><span>${PASS_THRESHOLD}%</span></div>
+      </div>
+    </div>
+    <div class="footer">
+      ${wrong>0?`<button class="btn btn-primary" style="margin-bottom:8px" onclick="goReview()">📝 Review ${wrong} Wrong Answer${wrong>1?'s':''}</button>`:''}
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="restart()">Retake</button>
+        <button class="btn btn-secondary" onclick="goStart()">Home</button>
+      </div>
+    </div>
+      <div class="watermark" style="margin-top:8px">made by faizwahid · Jun 2026</div>
+  `;
+}
+
+function goReview(){state.screen='review';render()}
+function goStart(){state.screen='start';state.index=0;state.answers=[];render()}
+function restart(){startQuiz()}
+
+function renderReview(){
+  const wrongs = state.answers.map((a,i)=>({a,i})).filter(x=>x.a && !x.a.correct);
+  const itemsHtml = wrongs.map(({a,i})=>{
+    const q = questions[i];
+    const yourAns = a.selected>=0 ? `${String.fromCharCode(65+a.selected)}. ${q.opts[a.selected]}` : (a.timeUp?'(Time ran out)':'(Skipped)');
+    const correctAns = `${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}`;
+    return `
+      <div class="review-item">
+        <div class="review-q"><span class="qnum">Q${i+1}.</span>${escapeHtml(q.q)}</div>
+        <div class="review-answers">
+          <div class="review-your"><div class="label">You answered</div>${escapeHtml(yourAns)}</div>
+          <div class="review-correct"><div class="label">Correct answer</div>${escapeHtml(correctAns)}</div>
+          <div class="review-exp">${q.exp}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-row">
+        <div class="set-label">${SET_NAME} · Review</div>
+        <div class="score-pill"><span class="bad">${wrongs.length}</span> to review</div>
+      </div>
+    </div>
+    <div class="main">
+      ${wrongs.length===0 ? '<p style="text-align:center;color:#94a3b8;padding:40px 0">No wrong answers! 🎉</p>' : itemsHtml}
+    </div>
+    <div class="footer">
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="state.screen='end';render()">← Back</button>
+        <button class="btn btn-primary" onclick="restart()">Retake Quiz</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){
+  const div=document.createElement('div');
+  div.textContent=s;
+  return div.innerHTML;
+}
+
+render();
+</script>
+</body>
+</html>

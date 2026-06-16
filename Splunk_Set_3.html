@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f1419">
+<title>Splunk Set 3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0f1419;color:#e5e7eb;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:16px;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit}
+.app{display:flex;flex-direction:column;height:100dvh;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom);position:relative}
+
+.header{padding:12px 16px 8px;border-bottom:1px solid #1f2937;background:#0f1419;flex-shrink:0}
+.header-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:8px}
+.set-label{font-size:11px;letter-spacing:1.5px;color:#94a3b8;font-weight:600;text-transform:uppercase}
+.score-pill{font-size:12px;color:#94a3b8;font-weight:500}
+.score-pill .ok{color:#4ade80}.score-pill .bad{color:#f87171}
+.progress-bar{height:3px;background:#1f2937;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,#65a637,#a3e635);transition:width .3s}
+.timer-row{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:#94a3b8}
+.timer{font-variant-numeric:tabular-nums;font-weight:600}
+.timer.low{color:#fbbf24}.timer.crit{color:#f87171}
+.q-num{color:#e5e7eb;font-weight:600}
+
+.main{flex:1;overflow-y:auto;padding:20px 16px 16px;-webkit-overflow-scrolling:touch}
+.question{font-size:17px;line-height:1.5;margin-bottom:20px;font-weight:500;color:#f1f5f9}
+.options{display:flex;flex-direction:column;gap:10px}
+.opt{padding:14px 16px;background:#1a2129;border:1.5px solid #1f2937;border-radius:12px;text-align:left;color:#e5e7eb;font-size:15px;line-height:1.4;transition:all .15s;display:flex;align-items:flex-start;gap:10px;min-height:54px;width:100%}
+.opt:active{transform:scale(.98)}
+.opt-letter{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#94a3b8;margin-top:1px}
+.opt.flash-correct{border-color:#4ade80;background:#0f2820;animation:pulseGreen .5s ease}
+.opt.flash-correct .opt-letter{background:#4ade80;color:#0f1419}
+.opt.flash-wrong{border-color:#f87171;background:#3a1318;animation:shakeRed .5s ease}
+.opt.flash-wrong .opt-letter{background:#f87171;color:#0f1419}
+.opt:disabled{cursor:default}
+
+@keyframes pulseGreen{0%{transform:scale(1)}50%{transform:scale(1.02)}100%{transform:scale(1)}}
+@keyframes shakeRed{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+.footer{padding:12px 16px;border-top:1px solid #1f2937;background:#0f1419;flex-shrink:0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+.btn{width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:600;transition:transform .1s,opacity .2s;min-height:54px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:#65a637;color:#0f1419}
+.btn-primary:disabled{background:#1f2937;color:#475569}
+.btn-secondary{background:#1a2129;color:#e5e7eb;border:1px solid #1f2937}
+.btn-row{display:flex;gap:8px}
+.btn-row .btn{flex:1}
+
+/* MODAL */
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;backdrop-filter:blur(2px)}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;background:#151d26;border-top-left-radius:24px;border-top-right-radius:24px;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);z-index:101;padding-bottom:env(safe-area-inset-bottom);max-height:85dvh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
+.sheet.show{transform:translateY(0)}
+.sheet-grip{width:36px;height:4px;background:#475569;border-radius:2px;margin:10px auto 0}
+.sheet-head{padding:18px 20px 14px;border-bottom:1px solid #1f2937}
+.sheet-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;margin-bottom:10px}
+.sheet-icon.ok{background:#0f2820;color:#4ade80;border:2px solid #4ade80}
+.sheet-icon.bad{background:#3a1318;color:#f87171;border:2px solid #f87171}
+.sheet-title{font-size:22px;font-weight:700;letter-spacing:-.3px}
+.sheet-title.ok{color:#4ade80}
+.sheet-title.bad{color:#f87171}
+
+.sheet-body{padding:16px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.ca-box{padding:14px;background:#0f2820;border:1.5px solid #4ade80;border-radius:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px}
+.ca-box .opt-letter{background:#4ade80;color:#0f1419}
+.ca-box .ca-content{flex:1}
+.ca-box .ca-label{font-size:10px;letter-spacing:1.5px;color:#4ade80;font-weight:700;text-transform:uppercase;margin-bottom:4px}
+.ca-box .ca-text{font-size:14px;line-height:1.4;color:#e5e7eb}
+
+.explain{padding:14px;background:#101a22;border-left:3px solid #65a637;border-radius:6px;font-size:14px;line-height:1.55;color:#cbd5e1}
+.explain b{color:#a3e635}
+.explain-label{font-size:10px;letter-spacing:1.5px;color:#65a637;font-weight:700;text-transform:uppercase;margin-bottom:6px;display:block}
+
+.sheet-footer{padding:12px 16px;padding-bottom:calc(12px + env(safe-area-inset-bottom));border-top:1px solid #1f2937;flex-shrink:0}
+
+.screen{flex:1;display:flex;flex-direction:column;justify-content:center;padding:24px;overflow-y:auto}
+.screen h1{font-size:28px;margin-bottom:8px;font-weight:700;color:#f1f5f9;line-height:1.2}
+.screen .sub{color:#94a3b8;margin-bottom:32px;line-height:1.5;font-size:15px}
+.mode-card{padding:18px;background:#1a2129;border:1.5px solid #1f2937;border-radius:14px;margin-bottom:10px;text-align:left;transition:all .15s;width:100%}
+.mode-card:active{transform:scale(.98)}
+.mode-card.active{border-color:#65a637}
+.mode-card h3{font-size:16px;margin-bottom:4px;color:#f1f5f9}
+.mode-card p{font-size:13px;color:#94a3b8;line-height:1.4}
+
+.result-pct{font-size:64px;font-weight:800;letter-spacing:-2px;line-height:1;margin-bottom:6px}
+.result-pct.pass{color:#4ade80}.result-pct.fail{color:#f87171}
+.result-label{font-size:14px;letter-spacing:2px;text-transform:uppercase;font-weight:700;margin-bottom:24px}
+.result-label.pass{color:#4ade80}.result-label.fail{color:#f87171}
+.stat-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1f2937;font-size:14px}
+.stat-row:last-child{border:none}
+.stat-row span:first-child{color:#94a3b8}
+.stat-row span:last-child{font-weight:600;font-variant-numeric:tabular-nums}
+
+.review-item{padding:16px;background:#1a2129;border-radius:12px;margin-bottom:12px;border-left:3px solid #f87171}
+.review-q{font-size:14px;font-weight:600;margin-bottom:10px;line-height:1.4;color:#f1f5f9}
+.review-q .qnum{color:#94a3b8;font-weight:400;margin-right:6px}
+.review-answers{font-size:13px;line-height:1.5}
+.review-answers .label{color:#94a3b8;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:2px}
+.review-your{color:#f87171;margin-bottom:8px}
+.review-correct{color:#4ade80;margin-bottom:8px}
+.review-exp{color:#cbd5e1;font-size:13px;padding-top:8px;border-top:1px solid #1f2937;margin-top:8px;line-height:1.5}
+
+@media (max-height:600px){
+.header{padding:8px 16px 6px}.main{padding:14px 16px}.question{font-size:15px;margin-bottom:14px}
+.opt{padding:11px 14px;min-height:46px;font-size:14px}.footer{padding:8px 16px}.btn{padding:13px;min-height:46px}
+.sheet-head{padding:14px 18px 10px}.sheet-icon{width:40px;height:40px;font-size:20px}.sheet-title{font-size:18px}
+}
+
+.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:10px;opacity:.6;font-weight:500}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet"></div>
+
+<script>
+const SET_NAME = "Set 3";
+const PASS_THRESHOLD = 70;
+
+const questions = [
+  {q:"Splunk shows data in ___ order.",
+   opts:["Reverse chronological order","Alphanumeric order","Chronological order","ASCII character order","GrabFood delivery order"],a:0,
+   exp:"Default is <b>reverse chronological</b> — newest events first."},
+  {q:"Which can be used as wildcard search in Splunk?",
+   opts:["=","!","*",">"],a:2,
+   exp:"<b>*</b> is the wildcard in Splunk SPL."},
+  {q:"What result will you get with search:\nindex=test sourcetype=\"The_Questionnaire_P*\"",
+   opts:["the_questionnaire pedia","the_questionnaire _pedia","the_questionnaire_pedia","the_questionnaire Pedia"],a:2,
+   exp:"Wildcard matches anything after 'The_Questionnaire_P'. Closest valid sourcetype is <b>the_questionnaire_pedia</b>. (Sourcetype matching is case-sensitive — careful with capitalization in real exam.)"},
+  {q:"Prefix wildcards might cause performance issues.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. Leading wildcards (e.g. *fail) force full scans — avoid them."},
+  {q:"Machine data can be in structured and unstructured format.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. Splunk handles both (JSON/CSV structured, raw logs unstructured)."},
+  {q:"Field names are case sensitive.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. Field NAMES are case sensitive (Host ≠ host). Field VALUES are not."},
+  {q:"Splunk internal fields contain general info about events and start with underscore (_).",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. _time, _raw, _indextime, _sourcetype etc. all start with underscore."},
+  {q:"How many main user roles do you have in Splunk?",
+   opts:["2","1","3","4"],a:2,
+   exp:"<b>3 default roles</b>: admin, power, user. (You can create custom roles too.)"},
+  {q:"Which of the following are Splunk premium enhanced solutions?",
+   opts:["Splunk IT Service Intelligence (ITSI)","Splunk Enterprise Security (ES)","Splunk Analytics Security (AS)","Splunk User Behavior Analytics (UBA)"],a:1,
+   exp:"Premium solutions: <b>ITSI, ES, UBA</b>. ES is the most well-known. (AS doesn't exist — that's the trick.)"},
+  {q:"Fields are searchable name/value pairings that differentiate one event from another.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. That's the core definition of a field in Splunk."},
+  {q:"Splunk extracts fields from event data at index time AND at search time.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. Default fields at index time; most other fields at search time."},
+  {q:"Field values are case sensitive.",
+   opts:["True","False"],a:1,
+   exp:"<b>False</b>. Field VALUES are NOT case sensitive (status=ok = status=OK). Field NAMES are."},
+  {q:"Splunk indexes the data on the basis of timestamps.",
+   opts:["True","False"],a:0,
+   exp:"<b>True</b>. Splunk is a time-series engine — everything indexed by _time."},
+  {q:"___ is the default web port used by Splunk.",
+   opts:["8080","8000","443","8089"],a:1,
+   exp:"<b>8000</b> = Splunk Web. <b>8089</b> = management/REST. <b>9997</b> = receiving."},
+  {q:"Which is correct about Search & Reporting App? (Pick one strongest)",
+   opts:["Provides default interface for searching and analyzing logs","Can be accessed via Apps > Search & Reporting","It only gives us search functionality","Enables creation of knowledge objects, reports, alerts and dashboards"],a:3,
+   exp:"All except 'only gives search' are correct. <b>'Enables creation of knowledge objects, reports, alerts and dashboards'</b> is the most comprehensive answer."},
+  {q:"Parsing of data can happen both in HF and Indexer.",
+   opts:["No","Yes","Only HF"],a:1,
+   exp:"<b>Yes</b>. Both Heavy Forwarder and Indexer can parse. UF cannot."},
+  {q:"By default search results are not returned in ___ order.",
+   opts:["Alphabetical","ASCII","Reverse chronological","Chronological"],a:0,
+   exp:"They ARE returned in reverse chronological. So NOT alphabetical (or chronological)."},
+  {q:"Monitor option in Add Data provides ___ ?",
+   opts:["Only continuous monitoring","Only One-time monitoring","None of the above","Both One-time and continuous monitoring"],a:3,
+   exp:"<b>Monitor</b> supports both modes. Files/directories can be monitored continuously or one-time."},
+  {q:"License Meter runs before data compression.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. Licensing measures raw data volume BEFORE compression — so what you index counts."},
+  {q:"Forward option gathers and forwards data to indexers over a receiving port from remote machines.",
+   opts:["False","True"],a:1,
+   exp:"<b>True</b>. That's the role of forwarders."},
+  {q:"You can on-board data to Splunk using which means? (Pick the strongest single option)",
+   opts:["Splunk apps and add-ons","Splunk Web","CLI","inputs.conf"],a:1,
+   exp:"All four are valid means. <b>Splunk Web</b> (the GUI Add Data wizard) is the most common starting point. Others: CLI, inputs.conf, apps."},
+  {q:"Data sources being opened and read applies to which phase?",
+   opts:["None of the above","Indexing Phase","Parsing Phase","Input Phase"],a:3,
+   exp:"<b>Input Phase</b> = data is opened and read from the source."},
+  {q:"Select the correct options that apply to Index time processing (pick one main)",
+   opts:["Searching","Settings","Input","Parsing","Indexing"],a:4,
+   exp:"Index time = <b>Input, Parsing, Indexing</b> (3 phases). 'Indexing' is the final core phase. Searching happens later."},
+  {q:"Splunk automatically determines the source type for major data types.",
+   opts:["False","True"],a:1,
+   exp:"<b>True</b>. Splunk auto-detects common sourcetypes (access_combined, syslog, etc.)."},
+  {q:"Parsing of data can happen both in HF and UF.",
+   opts:["Yes","No"],a:1,
+   exp:"<b>No</b>. UF does NOT parse — it sends raw data. Only HF (and Indexer) can parse."},
+  {q:"Upload option creates inputs.conf",
+   opts:["Yes","No"],a:1,
+   exp:"<b>No</b>. Upload is a one-time index — no inputs.conf created. Monitor creates inputs.conf."},
+  {q:"Splunk index time process can be broken down into ___ phases.",
+   opts:["2","3","1","4"],a:1,
+   exp:"<b>3 phases</b>: Input, Parsing, Indexing."},
+  {q:"In Monitor option you can select which in GUI?",
+   opts:["Only HEC and TCP/UDP","None of the above","Files & Directories, HEC, TCP/UDP, and Scripts","Only Scripts","Only TCP/UDP"],a:2,
+   exp:"Monitor GUI options: <b>Files & Directories, HEC, TCP/UDP, Scripts</b>."},
+  {q:"Uploading local files through Upload option indexes the file only once.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. Upload = one-time. For ongoing collection, use Monitor."},
+  {q:"Which statements are correct about HF? (Pick most distinctive single)",
+   opts:["Parsing","Searching","Forwarding","Masking"],a:0,
+   exp:"HF can <b>Parse, Forward, Mask</b>. <b>Parsing</b> is the key distinguishing capability vs UF."},
+  {q:"Where does License meter happen?",
+   opts:["Parsing","Indexer","Heavy Forwarder","Input"],a:1,
+   exp:"<b>Indexer</b> meters license usage."},
+  {q:"Matching search terms are highlighted.",
+   opts:["Yes","No"],a:0,
+   exp:"<b>Yes</b>. Splunk highlights matched terms in result events for visibility."},
+  {q:"Beginning parentheses is automatically highlighted to guide you on complementing parentheses.",
+   opts:["Yes","No"],a:0,
+   exp:"<b>Yes</b>. The SPL editor highlights matching parens for syntax help."},
+  {q:"Zoom Out and Zoom to Selection re-executes the search.",
+   opts:["Yes","No"],a:0,
+   exp:"<b>Yes</b>. Both zoom actions re-run the search with the new time range."},
+  {q:"Every search in Splunk is also called ___ .",
+   opts:["None of the above","Job","Search Only"],a:1,
+   exp:"<b>Job</b>. Every search creates a search job, accessible via Activity > Jobs."},
+  {q:"Matching of parentheses is a feature of Splunk Assistant.",
+   opts:["No","Yes"],a:0,
+   exp:"<b>No</b>. Paren matching is an SPL editor feature, not Search Assistant."},
+  {q:"Search Assistant is enabled by default in the SPL editor with compact settings.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. Compact Search Assistant is on by default."},
+  {q:"What is Search Assistant in Splunk?",
+   opts:["Such feature does not exist","Only available to Admins","Shows options to complete the search string"],a:2,
+   exp:"<b>Autocomplete</b> for SPL — suggests commands, fields, and syntax as you type."},
+  {q:"@ symbol can be used in advanced time unit option.",
+   opts:["Yes","No"],a:0,
+   exp:"<b>Yes</b>. @ snaps time to a unit. e.g. -1d@d = beginning of yesterday."},
+  {q:"New data uploaded to Splunk is shown in ___ .",
+   opts:["30 Minutes","Real-time","10 Minutes","Overnight Download"],a:1,
+   exp:"<b>Real-time</b>. Once indexed, data is immediately searchable."},
+  {q:"Which options can specify start and end time for the query range?",
+   opts:["ending=","earliest=","beginning=","Only earliest= and latest=","All the above","latest="],a:3,
+   exp:"<b>earliest=</b> and <b>latest=</b> are the valid SPL time modifiers. 'ending=' and 'beginning=' do not exist."},
+  {q:"You can change the App context in Input setting.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. When adding inputs, you can pick which app the input belongs to."},
+  {q:"The default host name used in Inputs general settings cannot be changed.",
+   opts:["False","True"],a:0,
+   exp:"<b>False</b>. The default host name CAN be overridden per input."},
+  {q:"Events in Splunk are automatically segregated using date and time.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. _time is the primary index — events are organized chronologically."},
+  {q:"You are able to create a new Index in Data Input settings.",
+   opts:["No","Yes"],a:1,
+   exp:"<b>Yes</b>. When adding data via GUI, you can create a new index inline."},
+  {q:"Splunk parses data into individual events, extracts time, and assigns metadata.",
+   opts:["False","True"],a:1,
+   exp:"<b>True</b>. That's exactly what the Parsing phase does."},
+  {q:"Which is correct regarding click and drag option in timeline?",
+   opts:["Filters and displays most recent first","This doesn't execute a new query","Using this option executes a new query","No such functionality in Splunk timeline"],a:1,
+   exp:"<b>Click-and-drag filters existing results — does NOT re-run the search</b>. Zoom does re-run."},
+  {q:"Which symbol is used to snap the time?",
+   opts:["@","#","*","&"],a:0,
+   exp:"<b>@</b> snaps time. e.g. -1h@h = 1 hour ago snapped to top of the hour."},
+  {q:"Which statements are correct? (Pick best single)",
+   opts:["Zoom-Out: Expands the time focus and doesn't re-execute","Zoom to selection: Narrows the time range and doesn't re-execute","Zoom to selection: Narrows the time range and re-executes the search","Zoom-out: Expands the time focus and re-executes the search","Format Timeline: Hides or shows the timeline in different views"],a:3,
+   exp:"<b>Zoom-out expands time AND re-executes</b>. Zoom to selection also re-executes. Format Timeline changes view."},
+  {q:"There are three different search modes in Splunk. Which is one of them?",
+   opts:["Automatic","Manual","Fast","Smart","Verbose"],a:3,
+   exp:"Three modes: <b>Fast, Smart, Verbose</b>. Smart is the default — picks Fast or Verbose based on the query."}
+];
+
+
+// === APP LOGIC ===
+const app = document.getElementById('app');
+const backdrop = document.getElementById('backdrop');
+const sheet = document.getElementById('sheet');
+
+let state = {screen:'start',mode:'study',index:0,answers:[],timeLeft:60,timerId:null,startTime:null};
+
+function render(){
+  if(state.screen === 'start') renderStart();
+  else if(state.screen === 'quiz') renderQuiz();
+  else if(state.screen === 'end') renderEnd();
+  else if(state.screen === 'review') renderReview();
+}
+
+function renderStart(){
+  app.innerHTML = `
+    <div class="screen">
+      <h1>Splunk Core User</h1>
+      <div style="font-size:13px;letter-spacing:2px;color:#65a637;font-weight:700;margin-bottom:6px">${SET_NAME.toUpperCase()}</div>
+      <p class="sub">${questions.length} questions. Pass mark: ${PASS_THRESHOLD}%.</p>
+      <button class="mode-card ${state.mode==='study'?'active':''}" onclick="setMode('study')">
+        <h3>📖 Study Mode</h3>
+        <p>No timer. Tap an answer → popup shows correct/wrong + explanation. Best for train rides and bedtime review.</p>
+      </button>
+      <button class="mode-card ${state.mode==='exam'?'active':''}" onclick="setMode('exam')">
+        <h3>⏱️ Exam Mode</h3>
+        <p>60 seconds per question. Locked answers. Final pass/fail simulates real exam pressure.</p>
+      </button>
+    </div>
+    <div class="footer">
+      <button class="btn btn-primary" onclick="startQuiz()">Start ${state.mode==='exam'?'Exam':'Studying'} →</button>
+    </div>
+      <div class="watermark">made by faizwahid · Jun 2026</div>
+  `;
+}
+
+function setMode(m){state.mode=m;render()}
+
+function startQuiz(){
+  state.screen='quiz';state.index=0;state.answers=[];state.startTime=Date.now();
+  startTimer();render();
+}
+
+function startTimer(){
+  if(state.mode!=='exam')return;
+  clearInterval(state.timerId);
+  state.timeLeft=60;
+  state.timerId=setInterval(()=>{
+    state.timeLeft--;
+    if(state.timeLeft<=0){
+      clearInterval(state.timerId);
+      if(state.answers[state.index]===undefined){
+        state.answers[state.index]={selected:-1,correct:false,timeUp:true};
+        showResultSheet();
+      }
+      return;
+    }
+    updateTimer();
+  },1000);
+}
+
+function updateTimer(){
+  const el = document.querySelector('.timer');
+  if(!el)return;
+  el.textContent = formatTime(state.timeLeft);
+  el.classList.remove('low','crit');
+  if(state.timeLeft<=10) el.classList.add('crit');
+  else if(state.timeLeft<=20) el.classList.add('low');
+}
+
+function formatTime(s){
+  const m=Math.floor(s/60),sec=s%60;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+function renderQuiz(){
+  const i = state.index;
+  const q = questions[i];
+  const ans = state.answers[i];
+  const answered = ans !== undefined;
+  const correct = state.answers.filter(a=>a&&a.correct).length;
+  const wrong = state.answers.filter(a=>a&&!a.correct).length;
+
+  const optsHtml = q.opts.map((o,idx)=>{
+    let flash = '';
+    if(answered && ans.selected===idx){
+      flash = ans.correct ? 'flash-correct' : 'flash-wrong';
+    }
+    const letter = String.fromCharCode(65+idx);
+    return `<button class="opt ${flash}" ${answered?'disabled':''} onclick="selectAnswer(${idx})">
+      <span class="opt-letter">${letter}</span>
+      <span>${escapeHtml(o)}</span>
+    </button>`;
+  }).join('');
+
+  const progress = ((i+1)/questions.length)*100;
+  const timerHtml = state.mode==='exam' ? `
+    <div class="timer-row">
+      <span>⏱</span>
+      <span class="timer">${formatTime(state.timeLeft)}</span>
+    </div>` : '';
+
+  const footerBtn = (!answered && state.mode==='exam') ? `
+    <button class="btn btn-secondary" onclick="skipQuestion()">Skip ↷</button>` : `
+    <button class="btn btn-primary" disabled>Tap an answer above</button>`;
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-row">
+        <div class="set-label">${SET_NAME} · <span class="q-num">${i+1}/${questions.length}</span></div>
+        <div class="score-pill"><span class="ok">${correct}✓</span> · <span class="bad">${wrong}✗</span></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+      ${timerHtml}
+    </div>
+    <div class="main">
+      <div class="question">${escapeHtml(q.q)}</div>
+      <div class="options">${optsHtml}</div>
+    </div>
+    <div class="footer">${footerBtn}</div>
+  `;
+}
+
+function selectAnswer(idx){
+  if(state.answers[state.index]!==undefined)return;
+  clearInterval(state.timerId);
+  const q = questions[state.index];
+  const isCorrect = idx === q.a;
+  state.answers[state.index]={selected:idx,correct:isCorrect,timeUp:false};
+  render();
+  setTimeout(()=>showResultSheet(), 550);
+}
+
+function skipQuestion(){
+  state.answers[state.index]={selected:-1,correct:false,timeUp:false,skipped:true};
+  showResultSheet();
+}
+
+function showResultSheet(){
+  const i = state.index;
+  const q = questions[i];
+  const ans = state.answers[i];
+  const isCorrect = ans.correct;
+  const isTimeUp = ans.timeUp;
+  const isSkipped = ans.skipped;
+  const isLast = i === questions.length-1;
+
+  let cls, title, icon;
+  if(isCorrect){
+    cls='ok';title='Correct!';icon='✓';
+  } else {
+    cls='bad';
+    title = isTimeUp ? "Time's Up" : (isSkipped ? 'Skipped' : 'Incorrect');
+    icon = isTimeUp ? '⏱' : '✗';
+  }
+
+  const caHtml = !isCorrect ? `
+    <div class="ca-box">
+      <span class="opt-letter">${String.fromCharCode(65+q.a)}</span>
+      <div class="ca-content">
+        <div class="ca-label">Correct Answer</div>
+        <div class="ca-text">${escapeHtml(q.opts[q.a])}</div>
+      </div>
+    </div>` : '';
+
+  sheet.innerHTML = `
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <div class="sheet-icon ${cls}">${icon}</div>
+      <div class="sheet-title ${cls}">${title}</div>
+    </div>
+    <div class="sheet-body">
+      ${caHtml}
+      <div class="explain">
+        <span class="explain-label">Explanation</span>
+        ${q.exp}
+      </div>
+    </div>
+    <div class="sheet-footer">
+      <button class="btn btn-primary" onclick="nextQuestion()">
+        ${isLast?'See Results':'Next Question'} →
+      </button>
+    </div>
+  `;
+
+  requestAnimationFrame(()=>{
+    backdrop.classList.add('show');
+    sheet.classList.add('show');
+  });
+}
+
+function nextQuestion(){
+  backdrop.classList.remove('show');
+  sheet.classList.remove('show');
+  setTimeout(()=>{
+    if(state.index===questions.length-1){
+      state.screen='end';
+      clearInterval(state.timerId);
+      render();
+      return;
+    }
+    state.index++;
+    startTimer();
+    render();
+  }, 250);
+}
+
+function renderEnd(){
+  const correct = state.answers.filter(a=>a&&a.correct).length;
+  const pct = Math.round((correct/questions.length)*100);
+  const passed = pct >= PASS_THRESHOLD;
+  const wrong = state.answers.filter(a=>a&&!a.correct).length;
+  const skipped = state.answers.filter(a=>!a||a.skipped||a.timeUp||a.selected===-1).length;
+  const duration = Math.round((Date.now()-state.startTime)/1000);
+
+  app.innerHTML = `
+    <div class="screen">
+      <div class="set-label" style="margin-bottom:12px">${SET_NAME} Results</div>
+      <div class="result-pct ${passed?'pass':'fail'}">${pct}%</div>
+      <div class="result-label ${passed?'pass':'fail'}">${passed?'✓ Passed':'✗ Did Not Pass'}</div>
+      <div>
+        <div class="stat-row"><span>Correct</span><span style="color:#4ade80">${correct} / ${questions.length}</span></div>
+        <div class="stat-row"><span>Incorrect</span><span style="color:#f87171">${wrong}</span></div>
+        ${skipped>0?`<div class="stat-row"><span>Skipped / Time Up</span><span>${skipped}</span></div>`:''}
+        <div class="stat-row"><span>Mode</span><span>${state.mode==='exam'?'Exam':'Study'}</span></div>
+        <div class="stat-row"><span>Time</span><span>${formatTime(duration)}</span></div>
+        <div class="stat-row"><span>Pass threshold</span><span>${PASS_THRESHOLD}%</span></div>
+      </div>
+    </div>
+    <div class="footer">
+      ${wrong>0?`<button class="btn btn-primary" style="margin-bottom:8px" onclick="goReview()">📝 Review ${wrong} Wrong Answer${wrong>1?'s':''}</button>`:''}
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="restart()">Retake</button>
+        <button class="btn btn-secondary" onclick="goStart()">Home</button>
+      </div>
+    </div>
+      <div class="watermark" style="margin-top:8px">made by faizwahid · Jun 2026</div>
+  `;
+}
+
+function goReview(){state.screen='review';render()}
+function goStart(){state.screen='start';state.index=0;state.answers=[];render()}
+function restart(){startQuiz()}
+
+function renderReview(){
+  const wrongs = state.answers.map((a,i)=>({a,i})).filter(x=>x.a && !x.a.correct);
+  const itemsHtml = wrongs.map(({a,i})=>{
+    const q = questions[i];
+    const yourAns = a.selected>=0 ? `${String.fromCharCode(65+a.selected)}. ${q.opts[a.selected]}` : (a.timeUp?'(Time ran out)':'(Skipped)');
+    const correctAns = `${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}`;
+    return `
+      <div class="review-item">
+        <div class="review-q"><span class="qnum">Q${i+1}.</span>${escapeHtml(q.q)}</div>
+        <div class="review-answers">
+          <div class="review-your"><div class="label">You answered</div>${escapeHtml(yourAns)}</div>
+          <div class="review-correct"><div class="label">Correct answer</div>${escapeHtml(correctAns)}</div>
+          <div class="review-exp">${q.exp}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  app.innerHTML = `
+    <div class="header">
+      <div class="header-row">
+        <div class="set-label">${SET_NAME} · Review</div>
+        <div class="score-pill"><span class="bad">${wrongs.length}</span> to review</div>
+      </div>
+    </div>
+    <div class="main">
+      ${wrongs.length===0 ? '<p style="text-align:center;color:#94a3b8;padding:40px 0">No wrong answers! 🎉</p>' : itemsHtml}
+    </div>
+    <div class="footer">
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="state.screen='end';render()">← Back</button>
+        <button class="btn btn-primary" onclick="restart()">Retake Quiz</button>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(s){
+  const div=document.createElement('div');
+  div.textContent=s;
+  return div.innerHTML;
+}
+
+render();
+</script>
+</body>
+</html>
