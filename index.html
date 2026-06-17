@@ -13,7 +13,7 @@ a{color:inherit;text-decoration:none}
 
 .brand{font-size:11px;letter-spacing:2.5px;color:#65a637;font-weight:700;text-transform:uppercase;text-align:center;margin-bottom:6px}
 h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-align:center;color:#f1f5f9;margin-bottom:10px}
-.sub{text-align:center;color:#94a3b8;font-size:14px;line-height:1.5;margin-bottom:32px;max-width:340px;margin-left:auto;margin-right:auto}
+.sub{text-align:center;color:#94a3b8;font-size:14px;line-height:1.5;margin-bottom:24px;max-width:340px;margin-left:auto;margin-right:auto}
 
 .set-card{display:block;padding:18px 18px;background:#1a2129;border:1.5px solid #1f2937;border-radius:16px;margin-bottom:12px;transition:transform .15s,border-color .15s;width:100%;text-align:left}
 .set-card:active{transform:scale(.98);border-color:#65a637}
@@ -22,26 +22,34 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
 .set-info{flex:1;min-width:0}
 .set-title{font-size:16px;font-weight:600;color:#f1f5f9;margin-bottom:2px}
 .set-meta{font-size:12px;color:#94a3b8}
+.set-meta .multi-badge{display:inline-block;background:#3a2818;color:#fbbf24;font-size:10px;letter-spacing:.5px;padding:1px 6px;border-radius:8px;font-weight:600;margin-left:6px}
 .set-arrow{color:#475569;font-size:20px;font-weight:300}
 
-.tips{background:#101a22;border:1px solid #1f2937;border-radius:14px;padding:16px;margin-top:24px;font-size:13px;line-height:1.6;color:#cbd5e1}
-.tips .tips-title{font-size:11px;letter-spacing:1.5px;color:#65a637;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.tips{background:#101a22;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-top:20px;font-size:13px;line-height:1.55;color:#cbd5e1}
+.tips .tips-title{font-size:11px;letter-spacing:1.5px;color:#65a637;font-weight:700;text-transform:uppercase;margin-bottom:6px}
 .tips b{color:#a3e635;font-weight:600}
 
-.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:24px;opacity:.7;font-weight:500}
-.watermark a{color:#65a637;opacity:.8}
+.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:20px;opacity:.7;font-weight:500}
 
-.pass-info{display:flex;justify-content:space-around;background:#101a22;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:24px}
-.pass-stat{text-align:center}
-.pass-stat-num{font-size:22px;font-weight:800;color:#65a637;line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
-.pass-stat-lbl{font-size:10px;letter-spacing:1.5px;color:#94a3b8;text-transform:uppercase;font-weight:600}
+.pass-info{display:flex;justify-content:space-around;background:#101a22;border:1px solid #1f2937;border-radius:14px;padding:14px;margin-bottom:20px}
+.pass-stat{text-align:center;flex:1}
+.pass-stat-num{font-size:20px;font-weight:800;color:#65a637;line-height:1;margin-bottom:4px;font-variant-numeric:tabular-nums}
+.pass-stat-lbl{font-size:9px;letter-spacing:1px;color:#94a3b8;text-transform:uppercase;font-weight:600}
+
+.update-banner{background:#1a2820;border:1px solid #65a637;border-radius:12px;padding:12px 14px;margin-bottom:20px;font-size:13px;line-height:1.5;color:#cbd5e1}
+.update-banner .ub-title{color:#a3e635;font-weight:700;font-size:12px;margin-bottom:4px;letter-spacing:.5px}
 </style>
 </head>
 <body>
 
 <div class="brand">Splunk Core User</div>
 <h1>Practice Exam</h1>
-<p class="sub">Tap a set to start. Choose Study Mode for review, or Exam Mode with timer.</p>
+<p class="sub">4 sets · Study or Exam mode · matches real SPLK-1001 format</p>
+
+<div class="update-banner">
+  <div class="ub-title">⚡ Updated: Multi-answer questions</div>
+  21 questions now support "Choose 3/4/all" selections — matching the real exam's multi-response format.
+</div>
 
 <div class="pass-info">
   <div class="pass-stat">
@@ -49,12 +57,12 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
     <div class="pass-stat-lbl">Questions</div>
   </div>
   <div class="pass-stat">
-    <div class="pass-stat-num">70%</div>
-    <div class="pass-stat-lbl">Pass Mark</div>
+    <div class="pass-stat-num">21</div>
+    <div class="pass-stat-lbl">Multi-answer</div>
   </div>
   <div class="pass-stat">
-    <div class="pass-stat-num">60s</div>
-    <div class="pass-stat-lbl">Per Q (exam)</div>
+    <div class="pass-stat-num">70%</div>
+    <div class="pass-stat-lbl">Pass Mark</div>
   </div>
 </div>
 
@@ -63,7 +71,7 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
     <div class="set-icon">1</div>
     <div class="set-info">
       <div class="set-title">Set 1</div>
-      <div class="set-meta">50 questions · Lookups, searches, dashboards</div>
+      <div class="set-meta">50 questions<span class="multi-badge">2 MULTI</span></div>
     </div>
     <div class="set-arrow">›</div>
   </div>
@@ -74,7 +82,7 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
     <div class="set-icon">2</div>
     <div class="set-info">
       <div class="set-title">Set 2</div>
-      <div class="set-meta">51 questions · Indexing, components, reports</div>
+      <div class="set-meta">51 questions<span class="multi-badge">2 MULTI</span></div>
     </div>
     <div class="set-arrow">›</div>
   </div>
@@ -85,7 +93,7 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
     <div class="set-icon">3</div>
     <div class="set-info">
       <div class="set-title">Set 3</div>
-      <div class="set-meta">50 questions · Fields, parsing, time ranges</div>
+      <div class="set-meta">50 questions<span class="multi-badge">7 MULTI</span></div>
     </div>
     <div class="set-arrow">›</div>
   </div>
@@ -96,15 +104,20 @@ h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.1;text-alig
     <div class="set-icon">4</div>
     <div class="set-info">
       <div class="set-title">Set 4</div>
-      <div class="set-meta">59 questions · SPL commands, alerts, lookups</div>
+      <div class="set-meta">59 questions<span class="multi-badge">10 MULTI</span></div>
     </div>
     <div class="set-arrow">›</div>
   </div>
 </a>
 
 <div class="tips">
-  <div class="tips-title">💡 Quick Tip</div>
-  In Safari/Chrome, tap the <b>Share button → Add to Home Screen</b>. Launches like a real app, full screen, works offline.
+  <div class="tips-title">💡 Tip</div>
+  Multi-answer questions show <b>"Select N answers"</b> at top. Tap each correct option, then hit <b>Submit</b>. To pass: ALL correct selected, NO wrong ones.
+</div>
+
+<div class="tips" style="margin-top:10px">
+  <div class="tips-title">📱 Add to phone</div>
+  Browser menu → <b>Share → Add to Home Screen</b>. Real app icon, works offline.
 </div>
 
 <div class="watermark">made by faizwahid · Jun 2026</div>

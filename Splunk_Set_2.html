@@ -24,11 +24,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .q-num{color:#e5e7eb;font-weight:600}
 
 .main{flex:1;overflow-y:auto;padding:20px 16px 16px;-webkit-overflow-scrolling:touch}
-.question{font-size:17px;line-height:1.5;margin-bottom:20px;font-weight:500;color:#f1f5f9}
+.question{font-size:17px;line-height:1.5;margin-bottom:12px;font-weight:500;color:#f1f5f9}
+.multi-hint{display:inline-block;background:#3a2818;border:1px solid #fbbf24;color:#fbbf24;font-size:11px;letter-spacing:1px;padding:4px 10px;border-radius:20px;font-weight:600;text-transform:uppercase;margin-bottom:14px}
 .options{display:flex;flex-direction:column;gap:10px}
 .opt{padding:14px 16px;background:#1a2129;border:1.5px solid #1f2937;border-radius:12px;text-align:left;color:#e5e7eb;font-size:15px;line-height:1.4;transition:all .15s;display:flex;align-items:flex-start;gap:10px;min-height:54px;width:100%}
 .opt:active{transform:scale(.98)}
 .opt-letter{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:#1f2937;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#94a3b8;margin-top:1px}
+.opt.multi .opt-letter{border-radius:6px}
+.opt.selected{border-color:#65a637;background:#1a2820}
+.opt.selected .opt-letter{background:#65a637;color:#0f1419}
 .opt.flash-correct{border-color:#4ade80;background:#0f2820;animation:pulseGreen .5s ease}
 .opt.flash-correct .opt-letter{background:#4ade80;color:#0f1419}
 .opt.flash-wrong{border-color:#f87171;background:#3a1318;animation:shakeRed .5s ease}
@@ -42,12 +46,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .btn{width:100%;padding:16px;border-radius:14px;font-size:16px;font-weight:600;transition:transform .1s,opacity .2s;min-height:54px;display:flex;align-items:center;justify-content:center;gap:8px}
 .btn:active{transform:scale(.98)}
 .btn-primary{background:#65a637;color:#0f1419}
-.btn-primary:disabled{background:#1f2937;color:#475569}
+.btn-primary:disabled{background:#1f2937;color:#475569;cursor:default}
 .btn-secondary{background:#1a2129;color:#e5e7eb;border:1px solid #1f2937}
 .btn-row{display:flex;gap:8px}
 .btn-row .btn{flex:1}
 
-/* MODAL */
 .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .25s;z-index:100;backdrop-filter:blur(2px)}
 .backdrop.show{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;background:#151d26;border-top-left-radius:24px;border-top-right-radius:24px;transform:translateY(100%);transition:transform .3s cubic-bezier(.22,.61,.36,1);z-index:101;padding-bottom:env(safe-area-inset-bottom);max-height:85dvh;display:flex;flex-direction:column;box-shadow:0 -10px 40px rgba(0,0,0,.5)}
@@ -62,11 +65,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .sheet-title.bad{color:#f87171}
 
 .sheet-body{padding:16px 20px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
-.ca-box{padding:14px;background:#0f2820;border:1.5px solid #4ade80;border-radius:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:10px}
-.ca-box .opt-letter{background:#4ade80;color:#0f1419}
-.ca-box .ca-content{flex:1}
-.ca-box .ca-label{font-size:10px;letter-spacing:1.5px;color:#4ade80;font-weight:700;text-transform:uppercase;margin-bottom:4px}
-.ca-box .ca-text{font-size:14px;line-height:1.4;color:#e5e7eb}
+.ca-box{padding:14px;background:#0f2820;border:1.5px solid #4ade80;border-radius:12px;margin-bottom:14px}
+.ca-box-label{font-size:10px;letter-spacing:1.5px;color:#4ade80;font-weight:700;text-transform:uppercase;margin-bottom:8px}
+.ca-item{display:flex;align-items:flex-start;gap:10px;padding:6px 0}
+.ca-item:not(:last-child){border-bottom:1px solid rgba(74,222,128,.15)}
+.ca-item .opt-letter{background:#4ade80;color:#0f1419}
+.ca-item .ca-text{font-size:14px;line-height:1.4;color:#e5e7eb;flex:1;padding-top:2px}
 
 .explain{padding:14px;background:#101a22;border-left:3px solid #65a637;border-radius:6px;font-size:14px;line-height:1.55;color:#cbd5e1}
 .explain b{color:#a3e635}
@@ -101,13 +105,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .review-correct{color:#4ade80;margin-bottom:8px}
 .review-exp{color:#cbd5e1;font-size:13px;padding-top:8px;border-top:1px solid #1f2937;margin-top:8px;line-height:1.5}
 
+.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:10px;opacity:.6;font-weight:500}
+
 @media (max-height:600px){
-.header{padding:8px 16px 6px}.main{padding:14px 16px}.question{font-size:15px;margin-bottom:14px}
+.header{padding:8px 16px 6px}.main{padding:14px 16px}.question{font-size:15px;margin-bottom:10px}
 .opt{padding:11px 14px;min-height:46px;font-size:14px}.footer{padding:8px 16px}.btn{padding:13px;min-height:46px}
 .sheet-head{padding:14px 18px 10px}.sheet-icon{width:40px;height:40px;font-size:20px}.sheet-title{font-size:18px}
 }
-
-.watermark{text-align:center;font-size:10px;color:#475569;letter-spacing:1.5px;margin-top:10px;opacity:.6;font-weight:500}
 </style>
 </head>
 <body>
@@ -161,7 +165,7 @@ const questions = [
    exp:"<b>All Fields</b> shows everything including <b>non-interesting</b> fields (those appearing in <20% of events)."},
   {q:"When viewing search results, what is an Interesting Field?",
    opts:["Appears in at least 20% of events","Appears in every event","Appears in any event","Appears in top 10 events"],a:0,
-   exp:"<b>≥20% threshold</b> = Interesting Field. <100% but ≥20%."},
+   exp:"<b>>=20% threshold</b> = Interesting Field. <100% but >=20%."},
   {q:"When a Splunk search generates Statistics tab data, what export formats are available?",
    opts:["Raw Events, CSV, XML, JSON","Raw Events, XML, JSON","CSV, XML, JSON","CSV, JSON, PDF"],a:2,
    exp:"Statistics export: <b>CSV, XML, JSON</b>. Raw Events only for event-based results."},
@@ -179,7 +183,7 @@ const questions = [
    exp:"<b>Save as a report</b>, then add the report to multiple dashboards. One source of truth."},
   {q:"What does earliest=-72h@h latest=@d mean?",
    opts:["Look back from 3 days ago, up to beginning of today","Look back 72 hours, up to one day ago","Look back 72 hours, up to end of today","Look back 3 days ago and prior"],a:0,
-   exp:"<b>-72h@h</b> = 72 hours ago snapped to hour. <b>@d</b> = beginning of today. So: ~3 days ago → start of today."},
+   exp:"<b>-72h@h</b> = 72 hours ago snapped to hour. <b>@d</b> = beginning of today. So: ~3 days ago to start of today."},
   {q:"Which events will be returned by: host=www3 status=503",
    opts:["Events with host www3 OR status 503","Events with host www3 AND status 503","Need more info — cannot run without index","Need more info — need time range"],a:1,
    exp:"Default Boolean is <b>AND</b>. Both conditions must match."},
@@ -237,12 +241,14 @@ const questions = [
   {q:"Universal forwarder is recommended for forwarding logs to indexers.",
    opts:["False","True"],a:1,
    exp:"<b>True</b>. UF is lightweight, low-resource — the standard for log forwarding."},
-  {q:"Splunk apps are used for (choose three)... which is a valid use?",
-   opts:["Allows multiple workspaces for different use cases/user roles","We cannot install Splunk App","Collection of config files like data inputs, UI, Knowledge Objects","Designed to cater numerous use cases and empower Splunk"],a:3,
-   exp:"All three correct options describe apps. <b>'Designed to cater numerous use cases'</b> is the most encompassing. (Wrong one: 'We cannot install'.)"},
-  {q:"Three basic components of Splunk?",
-   opts:["Deployment Server","Forwarders","Index","Search Head, Indexer, Forwarders"],a:3,
-   exp:"<b>Forwarder, Indexer, Search Head</b> are the three main components."},
+  {q:"Splunk apps are used for which of the following?",
+   opts:["Allows multiple workspaces for different use cases/user roles","We cannot install Splunk App","Collection of config files like data inputs, UI, Knowledge Objects","Designed to cater numerous use cases and empower Splunk"],
+   a:[0,2,3],multi:true,
+   exp:"Apps are <b>collections of config + UI + KOs</b> that <b>enable multiple use cases/workspaces</b> and <b>extend Splunk's capabilities</b>. (Wrong: 'we cannot install' — you absolutely can install apps.)"},
+  {q:"Three basic components of Splunk are:",
+   opts:["Deployment Server","Forwarders","Index","Search Head","Knowledge Objects","Indexer"],
+   a:[1,3,5],multi:true,
+   exp:"Three core components: <b>Forwarder, Indexer, Search Head</b>. (Deployment Server is for management; Index is storage; Knowledge Objects are configurations.)"},
   {q:"What is Splunk?",
    opts:["SIEM (Security Information and Event Management)","Cloud-based app for analyzing logs","Software platform to search, analyze, visualize machine-generated data","Database management tool"],a:2,
    exp:"<b>Splunk = software platform for machine data</b>. (It can be used as a SIEM, but that's not the definition.)"},
@@ -272,7 +278,7 @@ const questions = [
    exp:"<b>False</b>. The correct URL is <b>splunkbase.splunk.com</b> (not www.splunkbase.com)."},
   {q:"Okay, now easy question — which is true?",
    opts:["Afiq Handsome","Afiq Handsome-mest"],a:1,
-   exp:"😎 Handsome-mest = most handsome. (This is the form creator's joke question.)"}
+   exp:"😎 Handsome-mest = most handsome. (The form creator's joke question.)"}
 ];
 
 
@@ -281,7 +287,10 @@ const app = document.getElementById('app');
 const backdrop = document.getElementById('backdrop');
 const sheet = document.getElementById('sheet');
 
-let state = {screen:'start',mode:'study',index:0,answers:[],timeLeft:60,timerId:null,startTime:null};
+let state = {screen:'start',mode:'study',index:0,answers:[],timeLeft:60,timerId:null,startTime:null,multiSelections:[]};
+
+function isMulti(q){return Array.isArray(q.a)}
+function arrEq(a,b){if(a.length!==b.length)return false;const sa=[...a].sort();const sb=[...b].sort();return sa.every((v,i)=>v===sb[i])}
 
 function render(){
   if(state.screen === 'start') renderStart();
@@ -291,11 +300,12 @@ function render(){
 }
 
 function renderStart(){
+  const multiCount = questions.filter(isMulti).length;
   app.innerHTML = `
     <div class="screen">
       <h1>Splunk Core User</h1>
       <div style="font-size:13px;letter-spacing:2px;color:#65a637;font-weight:700;margin-bottom:6px">${SET_NAME.toUpperCase()}</div>
-      <p class="sub">${questions.length} questions. Pass mark: ${PASS_THRESHOLD}%.</p>
+      <p class="sub">${questions.length} questions${multiCount?` · ${multiCount} multi-answer`:''}. Pass mark: ${PASS_THRESHOLD}%.</p>
       <button class="mode-card ${state.mode==='study'?'active':''}" onclick="setMode('study')">
         <h3>📖 Study Mode</h3>
         <p>No timer. Tap an answer → popup shows correct/wrong + explanation. Best for train rides and bedtime review.</p>
@@ -307,15 +317,15 @@ function renderStart(){
     </div>
     <div class="footer">
       <button class="btn btn-primary" onclick="startQuiz()">Start ${state.mode==='exam'?'Exam':'Studying'} →</button>
-    </div>
       <div class="watermark">made by faizwahid · Jun 2026</div>
+    </div>
   `;
 }
 
 function setMode(m){state.mode=m;render()}
 
 function startQuiz(){
-  state.screen='quiz';state.index=0;state.answers=[];state.startTime=Date.now();
+  state.screen='quiz';state.index=0;state.answers=[];state.startTime=Date.now();state.multiSelections=[];
   startTimer();render();
 }
 
@@ -328,7 +338,8 @@ function startTimer(){
     if(state.timeLeft<=0){
       clearInterval(state.timerId);
       if(state.answers[state.index]===undefined){
-        state.answers[state.index]={selected:-1,correct:false,timeUp:true};
+        const q = questions[state.index];
+        state.answers[state.index]={selected: isMulti(q)?[]:-1,correct:false,timeUp:true};
         showResultSheet();
       }
       return;
@@ -358,15 +369,29 @@ function renderQuiz(){
   const answered = ans !== undefined;
   const correct = state.answers.filter(a=>a&&a.correct).length;
   const wrong = state.answers.filter(a=>a&&!a.correct).length;
+  const multi = isMulti(q);
+  const selections = state.multiSelections;
 
   const optsHtml = q.opts.map((o,idx)=>{
-    let flash = '';
-    if(answered && ans.selected===idx){
-      flash = ans.correct ? 'flash-correct' : 'flash-wrong';
+    let cls = 'opt' + (multi?' multi':'');
+    let icon = String.fromCharCode(65+idx);
+    if(answered){
+      if(multi){
+        const wasSelected = ans.selected.includes(idx);
+        const isCorrect = q.a.includes(idx);
+        if(wasSelected && isCorrect) {cls += ' flash-correct';icon='✓';}
+        else if(wasSelected && !isCorrect) {cls += ' flash-wrong';icon='✗';}
+        else if(!wasSelected && isCorrect) {cls += ' flash-correct';icon='✓';} // missed correct
+      } else {
+        if(ans.selected===idx) cls += ans.correct ? ' flash-correct' : ' flash-wrong';
+      }
+    } else if(multi && selections.includes(idx)){
+      cls += ' selected';
+      icon = '✓';
     }
-    const letter = String.fromCharCode(65+idx);
-    return `<button class="opt ${flash}" ${answered?'disabled':''} onclick="selectAnswer(${idx})">
-      <span class="opt-letter">${letter}</span>
+
+    return `<button class="${cls}" ${answered?'disabled':''} onclick="${multi?'toggleMulti':'selectAnswer'}(${idx})">
+      <span class="opt-letter">${icon}</span>
       <span>${escapeHtml(o)}</span>
     </button>`;
   }).join('');
@@ -378,9 +403,19 @@ function renderQuiz(){
       <span class="timer">${formatTime(state.timeLeft)}</span>
     </div>` : '';
 
-  const footerBtn = (!answered && state.mode==='exam') ? `
-    <button class="btn btn-secondary" onclick="skipQuestion()">Skip ↷</button>` : `
-    <button class="btn btn-primary" disabled>Tap an answer above</button>`;
+  const multiHint = multi ? `<div class="multi-hint">⚡ Select ${q.a.length} answers</div>` : '';
+
+  let footerBtn;
+  if(multi && !answered){
+    const ready = selections.length > 0;
+    footerBtn = `<button class="btn btn-primary" ${ready?'':'disabled'} onclick="submitMulti()">
+      ${ready ? `Submit (${selections.length} selected)` : 'Tap answers above'}
+    </button>`;
+  } else if(!answered && state.mode==='exam'){
+    footerBtn = `<button class="btn btn-secondary" onclick="skipQuestion()">Skip ↷</button>`;
+  } else {
+    footerBtn = `<button class="btn btn-primary" disabled>Tap an answer above</button>`;
+  }
 
   app.innerHTML = `
     <div class="header">
@@ -393,10 +428,32 @@ function renderQuiz(){
     </div>
     <div class="main">
       <div class="question">${escapeHtml(q.q)}</div>
+      ${multiHint}
       <div class="options">${optsHtml}</div>
     </div>
     <div class="footer">${footerBtn}</div>
   `;
+}
+
+function toggleMulti(idx){
+  if(state.answers[state.index]!==undefined)return;
+  const sel = state.multiSelections;
+  const i = sel.indexOf(idx);
+  if(i>=0) sel.splice(i,1);
+  else sel.push(idx);
+  render();
+}
+
+function submitMulti(){
+  if(state.answers[state.index]!==undefined)return;
+  clearInterval(state.timerId);
+  const q = questions[state.index];
+  const selections = [...state.multiSelections];
+  const isCorrect = arrEq(selections, q.a);
+  state.answers[state.index]={selected:selections,correct:isCorrect,timeUp:false};
+  state.multiSelections=[];
+  render();
+  setTimeout(()=>showResultSheet(), 600);
 }
 
 function selectAnswer(idx){
@@ -410,7 +467,9 @@ function selectAnswer(idx){
 }
 
 function skipQuestion(){
-  state.answers[state.index]={selected:-1,correct:false,timeUp:false,skipped:true};
+  const q = questions[state.index];
+  state.answers[state.index]={selected: isMulti(q)?[]:-1,correct:false,timeUp:false,skipped:true};
+  state.multiSelections=[];
   showResultSheet();
 }
 
@@ -422,6 +481,7 @@ function showResultSheet(){
   const isTimeUp = ans.timeUp;
   const isSkipped = ans.skipped;
   const isLast = i === questions.length-1;
+  const multi = isMulti(q);
 
   let cls, title, icon;
   if(isCorrect){
@@ -432,14 +492,30 @@ function showResultSheet(){
     icon = isTimeUp ? '⏱' : '✗';
   }
 
-  const caHtml = !isCorrect ? `
-    <div class="ca-box">
-      <span class="opt-letter">${String.fromCharCode(65+q.a)}</span>
-      <div class="ca-content">
-        <div class="ca-label">Correct Answer</div>
-        <div class="ca-text">${escapeHtml(q.opts[q.a])}</div>
-      </div>
-    </div>` : '';
+  let caHtml = '';
+  if(!isCorrect){
+    if(multi){
+      const items = q.a.map(idx => `
+        <div class="ca-item">
+          <span class="opt-letter">${String.fromCharCode(65+idx)}</span>
+          <div class="ca-text">${escapeHtml(q.opts[idx])}</div>
+        </div>`).join('');
+      caHtml = `
+        <div class="ca-box">
+          <div class="ca-box-label">Correct Answers (${q.a.length})</div>
+          ${items}
+        </div>`;
+    } else {
+      caHtml = `
+        <div class="ca-box">
+          <div class="ca-box-label">Correct Answer</div>
+          <div class="ca-item">
+            <span class="opt-letter">${String.fromCharCode(65+q.a)}</span>
+            <div class="ca-text">${escapeHtml(q.opts[q.a])}</div>
+          </div>
+        </div>`;
+    }
+  }
 
   sheet.innerHTML = `
     <div class="sheet-grip"></div>
@@ -478,6 +554,7 @@ function nextQuestion(){
       return;
     }
     state.index++;
+    state.multiSelections=[];
     startTimer();
     render();
   }, 250);
@@ -488,7 +565,7 @@ function renderEnd(){
   const pct = Math.round((correct/questions.length)*100);
   const passed = pct >= PASS_THRESHOLD;
   const wrong = state.answers.filter(a=>a&&!a.correct).length;
-  const skipped = state.answers.filter(a=>!a||a.skipped||a.timeUp||a.selected===-1).length;
+  const skipped = state.answers.filter(a=>!a||a.skipped||a.timeUp||a.selected===-1||(Array.isArray(a.selected)&&a.selected.length===0&&!a.correct)).length;
   const duration = Math.round((Date.now()-state.startTime)/1000);
 
   app.innerHTML = `
@@ -499,7 +576,6 @@ function renderEnd(){
       <div>
         <div class="stat-row"><span>Correct</span><span style="color:#4ade80">${correct} / ${questions.length}</span></div>
         <div class="stat-row"><span>Incorrect</span><span style="color:#f87171">${wrong}</span></div>
-        ${skipped>0?`<div class="stat-row"><span>Skipped / Time Up</span><span>${skipped}</span></div>`:''}
         <div class="stat-row"><span>Mode</span><span>${state.mode==='exam'?'Exam':'Study'}</span></div>
         <div class="stat-row"><span>Time</span><span>${formatTime(duration)}</span></div>
         <div class="stat-row"><span>Pass threshold</span><span>${PASS_THRESHOLD}%</span></div>
@@ -511,27 +587,34 @@ function renderEnd(){
         <button class="btn btn-secondary" onclick="restart()">Retake</button>
         <button class="btn btn-secondary" onclick="goStart()">Home</button>
       </div>
-    </div>
       <div class="watermark" style="margin-top:8px">made by faizwahid · Jun 2026</div>
+    </div>
   `;
 }
 
 function goReview(){state.screen='review';render()}
-function goStart(){state.screen='start';state.index=0;state.answers=[];render()}
+function goStart(){state.screen='start';state.index=0;state.answers=[];state.multiSelections=[];render()}
 function restart(){startQuiz()}
 
 function renderReview(){
   const wrongs = state.answers.map((a,i)=>({a,i})).filter(x=>x.a && !x.a.correct);
   const itemsHtml = wrongs.map(({a,i})=>{
     const q = questions[i];
-    const yourAns = a.selected>=0 ? `${String.fromCharCode(65+a.selected)}. ${q.opts[a.selected]}` : (a.timeUp?'(Time ran out)':'(Skipped)');
-    const correctAns = `${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}`;
+    const multi = isMulti(q);
+    let yourAns, correctAns;
+    if(multi){
+      yourAns = a.selected.length>0 ? a.selected.map(idx=>`${String.fromCharCode(65+idx)}. ${q.opts[idx]}`).join(' · ') : (a.timeUp?'(Time ran out)':'(Skipped)');
+      correctAns = q.a.map(idx=>`${String.fromCharCode(65+idx)}. ${q.opts[idx]}`).join(' · ');
+    } else {
+      yourAns = a.selected>=0 ? `${String.fromCharCode(65+a.selected)}. ${q.opts[a.selected]}` : (a.timeUp?'(Time ran out)':'(Skipped)');
+      correctAns = `${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}`;
+    }
     return `
       <div class="review-item">
-        <div class="review-q"><span class="qnum">Q${i+1}.</span>${escapeHtml(q.q)}</div>
+        <div class="review-q"><span class="qnum">Q${i+1}.</span>${escapeHtml(q.q)}${multi?' <span style="color:#fbbf24;font-size:11px;font-weight:600">(MULTI)</span>':''}</div>
         <div class="review-answers">
           <div class="review-your"><div class="label">You answered</div>${escapeHtml(yourAns)}</div>
-          <div class="review-correct"><div class="label">Correct answer</div>${escapeHtml(correctAns)}</div>
+          <div class="review-correct"><div class="label">Correct answer${multi?'s':''}</div>${escapeHtml(correctAns)}</div>
           <div class="review-exp">${q.exp}</div>
         </div>
       </div>`;
